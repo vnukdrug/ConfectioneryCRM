@@ -1,0 +1,31 @@
+# Зависимости
+node_modules/
+**/node_modules/
+**/bin/
+**/obj/
+
+# Логи
+*.log
+**/logs/
+
+# Конфиги с секретами
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/appsettings.json (если там пароли)
+
+# Сборки
+**/dist/
+**/build/
+
+# Файлы среды
+.env
+.vscode/
+.idea/
+
+# База данных
+*.db
+*.sqlite
+
+# Системные файлы
+.DS_Store
+Thumbs.db
