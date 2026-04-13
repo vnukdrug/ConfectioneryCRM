@@ -19,13 +19,11 @@ public class BakerController : ControllerBase
         _context = context;
     }
 
-    // GET: api/baker/available-products/5
     [HttpGet("available-products/{filialId}")]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetAvailableProducts(int filialId)
     {
         try
         {
-            // Получаем все товары из категории "product", которые можно производить
             var products = await _context.Products
                 .Include(p => p.Category)
                 .Where(p => p.Category.Type == "product")
@@ -50,8 +48,6 @@ public class BakerController : ControllerBase
             return StatusCode(500, new { message = "Ошибка при загрузке товаров" });
         }
     }
-
-    // GET: api/baker/plan/5
     [HttpGet("plan/{filialId}")]
     public async Task<ActionResult<IEnumerable<PlanItemDto>>> GetPlan(int filialId)
     {
@@ -60,7 +56,6 @@ public class BakerController : ControllerBase
             var today = DateTime.UtcNow.Date;
             Console.WriteLine($"Поиск планов для филиала {filialId} на дату {today:yyyy-MM-dd}");
 
-            // Сначала посмотрим все планы для этого филиала
             var allPlans = await _context.ProductionPlans
                 .Include(p => p.Product)
                 .Where(p => p.FilialId == filialId)
@@ -72,7 +67,6 @@ public class BakerController : ControllerBase
                 Console.WriteLine($"  План ID={p.Id}, продукт={p.Product?.Name}, дата={p.PlanDate:yyyy-MM-dd HH:mm}, статус={p.Status}");
             }
 
-            // Теперь фильтрованные
             var plans = await _context.ProductionPlans
                 .Include(p => p.Product)
                 .Where(p => p.FilialId == filialId && p.PlanDate.Date == today)
@@ -98,7 +92,6 @@ public class BakerController : ControllerBase
         }
     }
 
-    // POST: api/baker/create-plan
     [HttpPost("create-plan")]
     [Authorize(Roles = "Admin,Director")]
     public async Task<ActionResult> CreatePlan(CreatePlanDto dto)
@@ -124,16 +117,12 @@ public class BakerController : ControllerBase
                 Console.WriteLine($"Филиал с ID {dto.FilialId} не найден");
                 return BadRequest(new { message = "Филиал не найден" });
             }
-
-            // Получаем ID текущего пользователя из токена
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
                 Console.WriteLine("Пользователь не авторизован");
                 return Unauthorized(new { message = "Пользователь не авторизован" });
             }
-
-            // 👇 ВАЖНО: Преобразуем дату в UTC
             var planDateUtc = DateTime.SpecifyKind(dto.PlanDate, DateTimeKind.Utc);
 
             var plan = new ProductionPlan
@@ -142,7 +131,7 @@ public class BakerController : ControllerBase
                 ProductId = dto.ProductId,
                 PlannedQuantity = dto.Quantity,
                 ProducedQuantity = 0,
-                PlanDate = planDateUtc,  // 👈 Используем UTC
+                PlanDate = planDateUtc,  
                 Status = "planned",
                 CreatedAt = DateTime.UtcNow,
                 CreatedByUserId = userId
@@ -162,8 +151,6 @@ public class BakerController : ControllerBase
             return StatusCode(500, new { message = "Ошибка при создании плана" });
         }
     }
-
-    // PUT: api/baker/done/5
     [HttpPut("done/{id}")]
     public async Task<ActionResult> MarkAsDone(int id)
     {
@@ -185,8 +172,6 @@ public class BakerController : ControllerBase
 
             plan.ProducedQuantity = plan.PlannedQuantity;
             plan.Status = "completed";
-
-            // 👇 ПОЛУЧАЕМ ID ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ ИЗ ТОКЕНА
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
@@ -196,7 +181,6 @@ public class BakerController : ControllerBase
 
             Console.WriteLine($"👤 Пользователь ID из токена: {userId}");
 
-            // Добавляем готовую продукцию на склад
             Console.WriteLine($"📦 Поиск остатка для FilialId={plan.FilialId}, ProductId={plan.ProductId}");
 
             var balance = await _context.StockBalances
@@ -220,7 +204,6 @@ public class BakerController : ControllerBase
                 balance.Quantity += plan.PlannedQuantity;
             }
 
-            // Записываем движение товара
             Console.WriteLine("📝 Создание записи движения товара");
             var movement = new StockMovement
             {
@@ -229,7 +212,7 @@ public class BakerController : ControllerBase
                 Quantity = plan.PlannedQuantity,
                 MovementType = "production",
                 CreatedAt = DateTime.UtcNow,
-                CreatedByUserId = userId  // 👈 Используем реальный ID из токена
+                CreatedByUserId = userId  
             };
             _context.StockMovements.Add(movement);
 

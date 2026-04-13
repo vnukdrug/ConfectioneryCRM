@@ -19,7 +19,6 @@ public class UsersController : ControllerBase
         _context = context;
     }
 
-    // GET: api/users
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetUsers()
@@ -48,7 +47,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    // GET: api/users/5
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<EmployeeDto>> GetUser(int id)
@@ -80,8 +78,6 @@ public class UsersController : ControllerBase
             return StatusCode(500, new { message = "Ошибка при загрузке пользователя" });
         }
     }
-
-    // GET: api/users/filial/5
     [HttpGet("filial/{filialId}")]
     [Authorize(Roles = "Admin,Director")]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetUsersByFilial(int filialId)
@@ -111,21 +107,18 @@ public class UsersController : ControllerBase
         }
     }
 
-    // POST: api/users
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<User>> CreateUser(CreateEmployeeDto dto)
     {
         try
         {
-            // Проверяем, не занят ли логин
             var existingUser = await _context.Users
                 .FirstOrDefaultAsync(u => u.Login == dto.Login);
 
             if (existingUser != null)
                 return Conflict(new { message = "Пользователь с таким логином уже существует" });
 
-            // Создаем нового пользователя
             var user = new User
             {
                 FullName = dto.FullName,
@@ -148,7 +141,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    // PUT: api/users/5
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateUser(int id, CreateEmployeeDto dto)
@@ -158,8 +150,6 @@ public class UsersController : ControllerBase
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound(new { message = "Пользователь не найден" });
-
-            // Проверяем уникальность логина (исключая текущего пользователя)
             var duplicate = await _context.Users
                 .FirstOrDefaultAsync(u => u.Login == dto.Login && u.Id != id);
 
@@ -186,7 +176,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    // PUT: api/users/5/filial
     [HttpPut("{id}/filial")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateUserFilial(int id, [FromBody] UpdateUserFilialDto dto)
@@ -199,7 +188,6 @@ public class UsersController : ControllerBase
             if (user == null)
                 return NotFound(new { message = "Пользователь не найден" });
 
-            // Если указан филиал, проверяем что он существует
             if (dto.FilialId.HasValue)
             {
                 var filial = await _context.Filials.FindAsync(dto.FilialId.Value);
@@ -224,7 +212,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    // DELETE: api/users/5
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteUser(int id)
@@ -240,7 +227,6 @@ public class UsersController : ControllerBase
             if (user == null)
                 return NotFound(new { message = "Пользователь не найден" });
 
-            // Проверяем, есть ли связанные записи
             if (user.StockMovements != null && user.StockMovements.Any())
                 return BadRequest(new { message = "Нельзя удалить пользователя, у которого есть движения товаров" });
 
@@ -262,7 +248,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    // GET: api/users/current
     [HttpGet("current")]
     public async Task<ActionResult<EmployeeDto>> GetCurrentUser()
     {

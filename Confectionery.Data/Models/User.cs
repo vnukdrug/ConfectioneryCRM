@@ -17,14 +17,13 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
 
     [Required, MaxLength(20)]
-    public string Role { get; set; } = string.Empty; // Admin, Director, Baker, Cashier
+    public string Role { get; set; } = string.Empty; 
 
     public int? FilialId { get; set; }
     public Filial? Filial { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Навигационные свойства (добавляем недостающие)
     public ICollection<StockMovement> StockMovements { get; set; } = new List<StockMovement>();
     public ICollection<Sale> Sales { get; set; } = new List<Sale>();
     public ICollection<ProductionPlan> ProductionPlans { get; set; } = new List<ProductionPlan>();

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout, Table, Button, Modal, Form, Input, Select, message, Space, Popconfirm, Tag, InputNumber } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import Sidebar from '../../components/Sidebar';
-import { api } from '../../api/api'; // должен быть правильный путь
+import { api } from '../../api/api'; 
 import type { Product, Category } from '../../types';
 
 const { Content } = Layout;
@@ -24,9 +24,8 @@ const Products: React.FC<ProductsProps> = ({ collapsed, onCollapse }) => {
 const loadData = async () => {
     setLoading(true);
     try {
-        // Заменяем getProducts на getAllProducts
         const [productsData, categoriesData] = await Promise.all([
-            api.getAllProducts(),  // 👈 ИСПРАВЛЕНО
+            api.getAllProducts(),  
             api.getCategories()
         ]);
         setProducts(productsData);

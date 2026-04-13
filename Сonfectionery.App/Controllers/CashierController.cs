@@ -19,25 +19,23 @@ public class CashierController : ControllerBase
         _context = context;
     }
 
-    // GET: api/cashier/products/5
-    // GET: api/cashier/products/5
     [HttpGet("products/{filialId}")]
     public async Task<ActionResult<IEnumerable<CashierProductDto>>> GetProducts(int filialId)
     {
         try
         {
-            // Получаем только готовую продукцию (category.Type = "product") с остатком > 0
+
             var products = await _context.StockBalances
                 .Include(sb => sb.Product)
                 .ThenInclude(p => p.Category)
                 .Where(sb => sb.FilialId == filialId
-                    && sb.Product.Category.Type == "product"  // Только готовая продукция
-                    && sb.Quantity > 0)                        // Только то, что есть в наличии
+                    && sb.Product.Category.Type == "product"  
+                    && sb.Quantity > 0)                        
                 .Select(sb => new CashierProductDto
                 {
                     Id = sb.Product.Id,
                     Name = sb.Product.Name,
-                    Price = sb.Product.Price,                  // Берем цену из товара
+                    Price = sb.Product.Price,                  
                     Quantity = (int)sb.Quantity
                 })
                 .ToListAsync();
@@ -51,18 +49,15 @@ public class CashierController : ControllerBase
         }
     }
 
-    // POST: api/cashier/sale
     [HttpPost("sale")]
     public async Task<ActionResult> CreateSale(SaleDto dto)
     {
         try
         {
-            // Проверяем существование филиала
             var filial = await _context.Filials.FindAsync(dto.FilialId);
             if (filial == null)
                 return BadRequest(new { message = "Филиал не найден" });
 
-            // Получаем текущего пользователя из токена
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 return Unauthorized(new { message = "Пользователь не авторизован" });
@@ -71,21 +66,17 @@ public class CashierController : ControllerBase
 
             try
             {
-                // Создаем продажу
                 var sale = new Sale
                 {
                     FilialId = dto.FilialId,
-                    TotalAmount = dto.Total,  // Сумма продажи
+                    TotalAmount = dto.Total,  
                     CreatedAt = DateTime.UtcNow,
                     CreatedByUserId = userId
                 };
                 _context.Sales.Add(sale);
                 await _context.SaveChangesAsync();
-
-                // Создаем позиции продажи и обновляем остатки
                 foreach (var item in dto.Items)
                 {
-                    // Добавляем позицию в чек
                     var saleItem = new SaleItem
                     {
                         SaleId = sale.Id,
@@ -96,7 +87,6 @@ public class CashierController : ControllerBase
                     };
                     _context.SaleItems.Add(saleItem);
 
-                    // Обновляем остаток на складе
                     var balance = await _context.StockBalances
                         .FirstOrDefaultAsync(sb => sb.FilialId == dto.FilialId && sb.ProductId == item.ProductId);
 
@@ -114,7 +104,6 @@ public class CashierController : ControllerBase
 
                     balance.Quantity -= item.Quantity;
 
-                    // Записываем движение товара
                     var movement = new StockMovement
                     {
                         FilialId = dto.FilialId,
@@ -153,7 +142,6 @@ public class CashierController : ControllerBase
         }
     }
 
-    // GET: api/cashier/check/{id}
     [HttpGet("check/{id}")]
     public async Task<ActionResult<object>> GetCheck(int id)
     {

@@ -60,7 +60,7 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
         } finally {
             setLoading(false);
         }
-    }, [filter]); // 👈 Зависимости от конкретных полей, а не от всего объекта
+    }, [filter]); 
 
     useEffect(() => {
         loadFilials();
@@ -70,7 +70,7 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
         if (filter.startDate && filter.endDate) {
             loadReports();
         }
-    }, [filter.startDate, filter.endDate, filter.filialId, loadReports]); // 👈 Зависимости от конкретных полей
+    }, [filter.startDate, filter.endDate, filter.filialId, loadReports]); 
 
     const handleDateChange = (
         _: RangePickerProps['value'], 

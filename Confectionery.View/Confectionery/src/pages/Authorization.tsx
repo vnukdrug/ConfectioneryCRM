@@ -6,7 +6,6 @@ import { api } from '../api/api';
 
 const { Title, Text } = Typography;
 
-// Тип для данных формы
 interface LoginForm {
     login: string;
     password: string;
@@ -15,8 +14,6 @@ interface LoginForm {
 const Authorization = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-
-    // Заменяем any на LoginForm
     const onFinish = async (values: LoginForm) => {
         setLoading(true);
         try {

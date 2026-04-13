@@ -23,17 +23,15 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Уникальность логина
+
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Login)
             .IsUnique();
 
-        // Уникальность (филиал + товар) для остатков
         modelBuilder.Entity<StockBalance>()
             .HasIndex(sb => new { sb.FilialId, sb.ProductId })
             .IsUnique();
 
-        // Настройка связей для перемещений
         modelBuilder.Entity<StockMovement>()
             .HasOne(sm => sm.SourceFilial)
             .WithMany()

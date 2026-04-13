@@ -97,8 +97,6 @@ export interface StockMovement {
     movementType: 'income' | 'outcome' | 'transfer';
     createdAt?: string;
 }
-// Добавь в файл types/index.ts
-
 export interface PlanItem {
     id: number;
     product: string;
@@ -107,8 +105,6 @@ export interface PlanItem {
     status: 'planned' | 'in_progress' | 'completed';
     deadline: string;
 }
-
-// Добавляем или обновляем эти интерфейсы
 
 export interface CartItem {
     id: number;
@@ -143,10 +139,9 @@ export interface Product {
     unit: string;
     price: number;
     minStock: number;
-    quantity?: number; // Добавляем опциональное поле для остатка
+    quantity?: number; 
 }
 
-// Добавляем отдельный интерфейс для товаров в кассе
 export interface CashierProduct {
     id: number;
     name: string;
@@ -158,5 +153,5 @@ export interface CreatePlanDto {
     filialId: number;
     productId: number;
     quantity: number;
-    planDate: string;  // или Date
+    planDate: string; 
 }

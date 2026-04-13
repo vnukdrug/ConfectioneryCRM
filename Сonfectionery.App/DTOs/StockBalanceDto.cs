@@ -6,7 +6,7 @@ public class StockBalanceDto
     public string Filial { get; set; } = string.Empty;
     public string Product { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
-    public string CategoryType { get; set; } = string.Empty; // product/ingredient
+    public string CategoryType { get; set; } = string.Empty; 
     public decimal Quantity { get; set; }
     public string Unit { get; set; } = string.Empty;
     public decimal MinStock { get; set; }

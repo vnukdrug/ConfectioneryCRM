@@ -22,7 +22,7 @@
 
 const API_BASE_URL = 'https://localhost:7239/api';
 
-// Функция для добавления токена в заголовки
+
 const getHeaders = () => {
     const token = localStorage.getItem('token');
     console.log('🔑 Token from localStorage:', token ? token.substring(0, 20) + '...' : '❌ No token');
@@ -33,7 +33,7 @@ const getHeaders = () => {
 };
 
 export const api = {
-    // 👥 СОТРУДНИКИ (добавляем метод для обновления филиала)
+    // СОТРУДНИКИ (метод для обновления филиала)
 updateUserFilial: async (userId: number, filialId: number | null): Promise<void> => {
     console.log('👥 Обновление филиала пользователя:', { userId, filialId });
     const response = await fetch(`${API_BASE_URL}/users/${userId}/filial`, {
@@ -45,7 +45,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         throw new Error('Ошибка при обновлении филиала');
     }
 },
-    // 🔐 АВТОРИЗАЦИЯ
+    // АВТОРИЗАЦИЯ
     login: async (login: string, password: string): Promise<AuthResponse> => {
         console.log('🔐 Попытка входа:', login);
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -80,7 +80,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         return user;
     },
 
-    // 👥 СОТРУДНИКИ
+    // СОТРУДНИКИ
     getEmployees: async (): Promise<Employee[]> => {
         console.log('👥 Запрос к /employees');
         const response = await fetch(`${API_BASE_URL}/employees`, {
@@ -142,7 +142,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         console.log('👥 Сотрудник удален');
     },
 
-    // 🏢 ФИЛИАЛЫ
+    // ФИЛИАЛЫ
     getFilials: async (): Promise<Filial[]> => {
         console.log('🏢 Запрос к /filials');
         const response = await fetch(`${API_BASE_URL}/filials`, {
@@ -216,7 +216,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         console.log('🏢 Филиал удален');
     },
 
-    // 📦 ТОВАРЫ (общие)
+    // ТОВАРЫ (общие)
     getAllProducts: async (): Promise<Product[]> => {
         console.log('📦 Запрос к /products');
         const response = await fetch(`${API_BASE_URL}/products`, {
@@ -275,7 +275,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         console.log('📦 Товар удален');
     },
 
-    // 🏷️ КАТЕГОРИИ
+    // КАТЕГОРИИ
     createCategory: async (data: Omit<Category, 'id'>): Promise<Category> => {
         console.log('🏷️ Создание категории:', data);
         const response = await fetch(`${API_BASE_URL}/categories`, {
@@ -313,7 +313,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         console.log('🏷️ Категория удалена');
     },
 
-    // 📦 СКЛАД
+    // СКЛАД
     getWarehouse: async (filialId?: number): Promise<WarehouseItem[]> => {
         const url = filialId 
             ? `${API_BASE_URL}/stock/balances?filialId=${filialId}`
@@ -360,7 +360,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         console.log('📦 Движение товара создано');
     },
 
-   // 📊 ГЛАВНАЯ
+   // ГЛАВНАЯ
 getDashboardStats: async (filialId?: number): Promise<DashboardStats> => {
     const url = filialId 
         ? `${API_BASE_URL}/dashboard/stats?filialId=${filialId}`
@@ -396,7 +396,7 @@ getRecentSales: async (filialId?: number): Promise<RecentSale[]> => {
     if (!response.ok) throw new Error('Ошибка загрузки последних продаж');
     return response.json();
 },
-   // 📈 ОТЧЕТЫ
+   // ОТЧЕТЫ
 getSalesByDay: async (filter: ReportFilter): Promise<SalesByDay[]> => {
     console.log('📈 Запрос к /reports/sales-by-day с фильтром:', filter);
     const response = await fetch(`${API_BASE_URL}/reports/sales-by-day`, {
@@ -469,7 +469,7 @@ getReportSummary: async (filter: ReportFilter): Promise<{ totalRevenue: number; 
     return data;
 },
 
-    // 🧑‍🍳 ДЛЯ ПОВАРА (Baker)
+    // ДЛЯ ПОВАРА
     getAvailableProducts: async (filialId: number): Promise<Product[]> => {
         console.log('🧑‍🍳 Запрос к /baker/available-products/${filialId}');
         const response = await fetch(`${API_BASE_URL}/baker/available-products/${filialId}`, {
@@ -520,7 +520,7 @@ getReportSummary: async (filter: ReportFilter): Promise<{ totalRevenue: number; 
         console.log('✅ План отмечен как выполненный');
     },
 
-   // 💰 ДЛЯ КАССИРА (Cashier)
+   // ДЛЯ КАССИРА 
 getCashierProducts: async (filialId: number): Promise<CashierProduct[]> => {
     console.log('💰 Запрос к /cashier/products/${filialId}');
     const response = await fetch(`${API_BASE_URL}/cashier/products/${filialId}`, {
@@ -533,7 +533,7 @@ getCashierProducts: async (filialId: number): Promise<CashierProduct[]> => {
     return data;
 },
 
-createSale: async (data: SaleDto): Promise<void> => {  // 👈 Заменяем any на SaleDto
+createSale: async (data: SaleDto): Promise<void> => {  
     console.log('💰 Отправка продажи:', data);
     const response = await fetch(`${API_BASE_URL}/cashier/sale`, {
         method: 'POST',
@@ -547,7 +547,7 @@ createSale: async (data: SaleDto): Promise<void> => {  // 👈 Заменяем 
     console.log('💰 Продажа оформлена');
 },
 
-    // 👨‍💼 ДЛЯ ДИРЕКТОРА (Director)
+    // ДЛЯ ДИРЕКТОРА 
     getDirectorData: async (filialId: number): Promise<{ filialName: string; stats: unknown }> => {
         console.log('👨‍💼 Запрос к /director/${filialId}');
         const response = await fetch(`${API_BASE_URL}/director/${filialId}`, {

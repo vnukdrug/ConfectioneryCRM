@@ -8,7 +8,7 @@ import Warehouse from './pages/Warehouse';
 import Reports from './pages/Reports';
 import Production from './pages/Production';
 import Sales from './pages/Sales';
-import Products from './pages/Products'; // должен быть правильный путь
+import Products from './pages/Products';
 import ProtectedRoute from './components/ProtectedRoute';
 import Planning from './pages/Planning';
 import Categories from './pages/Categories';
@@ -20,15 +20,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Authorization />} />
-        
-        {/* Главная - доступна всем */}
+
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <AdminDashboard collapsed={collapsed} onCollapse={setCollapsed} />
           </ProtectedRoute>
         } />
         
-        {/* Только Admin */}
+
         <Route path="/products" element={
           <ProtectedRoute allowedRoles={['Admin']}>
             <Products collapsed={collapsed} onCollapse={setCollapsed} />

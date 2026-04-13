@@ -19,7 +19,6 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/products
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
     {
@@ -40,7 +39,7 @@ public class ProductsController : ControllerBase
                 })
                 .ToListAsync();
 
-            Console.WriteLine($"Найдено товаров: {products.Count}"); // для отладки
+            Console.WriteLine($"Найдено товаров: {products.Count}"); 
             return Ok(products);
         }
         catch (Exception ex)
@@ -49,7 +48,6 @@ public class ProductsController : ControllerBase
             return StatusCode(500, new { message = "Ошибка при загрузке товаров" });
         }
     }
-    // GET: api/products/5
     [HttpGet("{id}")]
     public async Task<ActionResult<ProductDto>> GetProduct(int id)
     {
@@ -83,7 +81,6 @@ public class ProductsController : ControllerBase
         }
     }
 
-    // POST: api/products
     [HttpPost]
     public async Task<ActionResult<Product>> CreateProduct(CreateProductDto dto)
     {
@@ -112,7 +109,6 @@ public class ProductsController : ControllerBase
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            // 👇 ВАЖНО: Не возвращаем product напрямую, а создаем DTO
             var productDto = new ProductDto
             {
                 Id = product.Id,
@@ -135,7 +131,6 @@ public class ProductsController : ControllerBase
             return StatusCode(500, new { message = "Ошибка при создании товара" });
         }
     }
-    // PUT: api/products/5
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProduct(int id, Product product)
     {
@@ -174,7 +169,6 @@ public class ProductsController : ControllerBase
         }
     }
 
-    // DELETE: api/products/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(int id)
     {

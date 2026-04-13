@@ -19,7 +19,6 @@ public class StockController : ControllerBase
         _context = context;
     }
 
-    // GET: api/stock/balances
     [HttpGet("balances")]
     public async Task<ActionResult<IEnumerable<StockBalanceDto>>> GetStockBalances([FromQuery] int? filialId)
     {
@@ -51,7 +50,6 @@ public class StockController : ControllerBase
         return Ok(balances);
     }
 
-    // GET: api/stock/products
     [HttpGet("products")]
     public async Task<ActionResult<IEnumerable<object>>> GetProducts()
     {
@@ -71,7 +69,6 @@ public class StockController : ControllerBase
         return Ok(products);
     }
 
-    // POST: api/stock/movement
     [HttpPost("movement")]
     public async Task<ActionResult> CreateMovement(CreateStockMovementDto dto)
     {
@@ -80,15 +77,12 @@ public class StockController : ControllerBase
 
         try
         {
-            // Проверяем существование филиала
             var filial = await _context.Filials.FindAsync(dto.FilialId);
             if (filial == null)
             {
                 Console.WriteLine($"Филиал с ID {dto.FilialId} не найден");
                 return BadRequest(new { message = "Филиал не найден" });
             }
-
-            // Проверяем существование товара
             var product = await _context.Products.FindAsync(dto.ProductId);
             if (product == null)
             {
@@ -96,7 +90,6 @@ public class StockController : ControllerBase
                 return BadRequest(new { message = "Товар не найден" });
             }
 
-            // Проверяем существование пользователя (ID=1)
             var user = await _context.Users.FindAsync(6);
             if (user == null)
             {
@@ -120,7 +113,6 @@ public class StockController : ControllerBase
 
             try
             {
-                // Находим или создаем остаток
                 var balance = await _context.StockBalances
                     .FirstOrDefaultAsync(sb => sb.FilialId == dto.FilialId && sb.ProductId == dto.ProductId);
 
@@ -136,7 +128,6 @@ public class StockController : ControllerBase
                     _context.StockBalances.Add(balance);
                 }
 
-                // Обновляем количество
                 if (dto.MovementType == "income")
                 {
                     balance.Quantity += dto.Quantity;
@@ -150,8 +141,6 @@ public class StockController : ControllerBase
                     }
                     balance.Quantity -= dto.Quantity;
                 }
-
-                // Сохраняем движение
                 var movement = new StockMovement
                 {
                     FilialId = dto.FilialId,

@@ -20,7 +20,6 @@ const Employees: React.FC<EmployeesProps> = ({ collapsed, onCollapse }) => {
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [form] = Form.useForm();
 
-    // Загрузка данных
     const loadData = async () => {
         setLoading(true);
         try {

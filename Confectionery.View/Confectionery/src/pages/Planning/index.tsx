@@ -49,8 +49,7 @@ const Planning: React.FC<PlanningProps> = ({ collapsed, onCollapse }) => {
                 setPlans(plansData);
             } else {
                 console.log('⚠️ Нет filialId у пользователя, загружаем для всех');
-                // Если нет филиала у пользователя, загружаем все планы (для админа)
-                const plansData = await api.getBakerPlan(1); // или другой логик��
+                const plansData = await api.getBakerPlan(1); 
                 setPlans(plansData);
             }
         } catch (error) {
@@ -60,11 +59,11 @@ const Planning: React.FC<PlanningProps> = ({ collapsed, onCollapse }) => {
             console.log('🏁 loadData finished');
             setLoading(false);
         }
-    }, [user?.filialId]); // 👈 Зависимость только от filialId
+    }, [user?.filialId]); 
 
     useEffect(() => {
         loadData();
-    }, [loadData]); // 👈 loadData уже включает user?.filialId
+    }, [loadData]); 
 
     const handleCreatePlan = async () => {
         try {

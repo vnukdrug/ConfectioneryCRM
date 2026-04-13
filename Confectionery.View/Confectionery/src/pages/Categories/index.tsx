@@ -87,7 +87,7 @@ const Categories: React.FC<CategoriesProps> = ({ collapsed, onCollapse }) => {
             await api.deleteCategory(id);
             message.success('Категория удалена');
             loadData();
-        } catch (error: unknown) {  // 👈 Заменяем any на unknown
+        } catch (error: unknown) { 
             if (error instanceof Error) {
                 message.error(error.message || 'Ошибка при удалении');
             } else {
@@ -111,7 +111,7 @@ const Categories: React.FC<CategoriesProps> = ({ collapsed, onCollapse }) => {
             setIsModalOpen(false);
             form.resetFields();
             loadData();
-        } catch (error: unknown) {  // 👈 Заменяем any на unknown
+        } catch (error: unknown) { 
             if (error instanceof Error) {
                 message.error(error.message || 'Проверьте заполнение полей');
             } else {

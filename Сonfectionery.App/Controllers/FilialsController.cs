@@ -19,7 +19,6 @@ public class FilialsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/filials
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FilialDto>>> GetFilials()
     {
@@ -37,7 +36,6 @@ public class FilialsController : ControllerBase
         return Ok(filials);
     }
 
-    // GET: api/filials/5
     [HttpGet("{id}")]
     public async Task<ActionResult<FilialDto>> GetFilial(int id)
     {
@@ -59,13 +57,11 @@ public class FilialsController : ControllerBase
         return Ok(filial);
     }
 
-    // POST: api/filials
     [HttpPost]
     public async Task<ActionResult<Filial>> CreateFilial(Filial filial)
     {
         try
         {
-            // Проверяем, нет ли филиала с таким же названием
             var existing = await _context.Filials
                 .FirstOrDefaultAsync(f => f.Name == filial.Name);
 
@@ -81,24 +77,21 @@ public class FilialsController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Логируем внутреннюю ошибку
             Console.WriteLine($"Ошибка при создании филиала: {ex.Message}");
             if (ex.InnerException != null)
             {
                 Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
             }
-            throw; // Пробрасываем дальше
+            throw;
         }
     }
 
-    // PUT: api/filials/5
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateFilial(int id, Filial filial)
     {
         if (id != filial.Id)
             return BadRequest();
 
-        // Проверяем, не занято ли название другим филиалом
         var existing = await _context.Filials
             .FirstOrDefaultAsync(f => f.Name == filial.Name && f.Id != id);
 
@@ -124,7 +117,6 @@ public class FilialsController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/filials/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteFilial(int id)
     {
@@ -132,7 +124,6 @@ public class FilialsController : ControllerBase
         if (filial == null)
             return NotFound();
 
-        // Проверяем, есть ли у филиала сотрудники
         var hasEmployees = await _context.Users.AnyAsync(u => u.FilialId == id);
         if (hasEmployees)
         {

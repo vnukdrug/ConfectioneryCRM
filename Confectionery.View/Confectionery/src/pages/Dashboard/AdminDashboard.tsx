@@ -43,7 +43,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ collapsed, onCollapse }
     const [salesByDay, setSalesByDay] = useState<SalesByDay[]>([]);
     const [salesByFilial, setSalesByFilial] = useState<SalesByFilial[]>([]);
     const [loading, setLoading] = useState(true);
-    const user = api.getCurrentUser(); // Получаем текущего пользователя
+    const user = api.getCurrentUser(); 
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -70,7 +70,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ collapsed, onCollapse }
         } finally {
             setLoading(false);
         }
-    }, [user?.filialId]); // Зависимость от filialId пользователя
+    }, [user?.filialId]); 
 
     useEffect(() => {
         loadData();
@@ -148,13 +148,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ collapsed, onCollapse }
 
     return (
         <Layout style={{ minHeight: '100vh' }}>
-            {/* 👇 Убираем onFilialChange */}
             <Sidebar collapsed={collapsed} onCollapse={onCollapse} />
             <Layout>
                 <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
                     <Title level={2}>Главная</Title>
-                    
-                    {/* Карточки со статистикой */}
                     <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                         <Col xs={24} sm={12} md={6}>
                             <Card>
@@ -207,7 +204,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ collapsed, onCollapse }
                         </Col>
                     </Row>
 
-                    {/* График продаж по дням */}
                     <Card title="Динамика продаж" style={{ marginBottom: 24 }}>
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={salesChartData}>
@@ -223,7 +219,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ collapsed, onCollapse }
                         </ResponsiveContainer>
                     </Card>
 
-                    {/* Продажи по филиалам и топ товаров */}
                     <Row gutter={16} style={{ marginBottom: 24 }}>
                         <Col span={12}>
                             <Card title="Продажи по филиалам">
@@ -275,7 +270,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ collapsed, onCollapse }
                         </Col>
                     </Row>
 
-                    {/* Критические остатки и последние продажи */}
                     <Row gutter={16}>
                         <Col span={12}>
                             <Card 

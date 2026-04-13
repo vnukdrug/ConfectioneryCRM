@@ -11,7 +11,7 @@ public class Category
     public string Name { get; set; } = string.Empty;
 
     [Required, MaxLength(20)]
-    public string Type { get; set; } = string.Empty; // product или ingredient
+    public string Type { get; set; } = string.Empty;
 
     public ICollection<Product> Products { get; set; } = new List<Product>();
 }

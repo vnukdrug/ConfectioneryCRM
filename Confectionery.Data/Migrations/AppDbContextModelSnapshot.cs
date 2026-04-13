@@ -42,7 +42,7 @@ namespace Confectionery.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.Filial", b =>
@@ -73,7 +73,7 @@ namespace Confectionery.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Filials");
+                    b.ToTable("Filials", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.Product", b =>
@@ -110,7 +110,7 @@ namespace Confectionery.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.ProductionPlan", b =>
@@ -155,7 +155,7 @@ namespace Confectionery.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductionPlans");
+                    b.ToTable("ProductionPlans", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.Sale", b =>
@@ -184,7 +184,7 @@ namespace Confectionery.Data.Migrations
 
                     b.HasIndex("FilialId");
 
-                    b.ToTable("Sales");
+                    b.ToTable("Sales", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.SaleItem", b =>
@@ -216,7 +216,7 @@ namespace Confectionery.Data.Migrations
 
                     b.HasIndex("SaleId");
 
-                    b.ToTable("SaleItems");
+                    b.ToTable("SaleItems", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.StockBalance", b =>
@@ -243,7 +243,7 @@ namespace Confectionery.Data.Migrations
                     b.HasIndex("FilialId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("StockBalances");
+                    b.ToTable("StockBalances", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.StockMovement", b =>
@@ -292,7 +292,7 @@ namespace Confectionery.Data.Migrations
 
                     b.HasIndex("TargetFilialId");
 
-                    b.ToTable("StockMovements");
+                    b.ToTable("StockMovements", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.User", b =>
@@ -336,7 +336,7 @@ namespace Confectionery.Data.Migrations
                     b.HasIndex("Login")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Confectionery.Data.Models.Product", b =>

@@ -43,11 +43,11 @@ const Warehouse: React.FC<WarehouseProps> = ({ collapsed, onCollapse }) => {
     } finally {
         setLoading(false);
     }
-}, [selectedFilial]); // добавили зависимость
+}, [selectedFilial]); 
 
 useEffect(() => {
     loadData();
-}, [loadData]); // теперь loadData стабильна
+}, [loadData]); 
 
     const filteredData = warehouse.filter(item => 
         item.product.toLowerCase().includes(searchText.toLowerCase())

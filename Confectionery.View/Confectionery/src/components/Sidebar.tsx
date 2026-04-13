@@ -20,7 +20,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api/api';
 import type { AuthResponse } from '../types';
-import '../style/App.css'; // Импортируем стили
+import '../style/App.css'; 
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -377,7 +377,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
         )}
       </div>
       
-      {/* Меню с красивым тонким скроллом */}
+      {}
       <div 
         className="sidebar-scroll-container"
         style={{ 

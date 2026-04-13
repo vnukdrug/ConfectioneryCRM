@@ -14,16 +14,13 @@ public class Product
     public Category Category { get; set; } = null!;
 
     [Required, MaxLength(10)]
-    public string Unit { get; set; } = string.Empty; // кг, шт, л
+    public string Unit { get; set; } = string.Empty; 
 
     public decimal MinStock { get; set; }
 
-    // Добавляем недостающие поля
-    public decimal Price { get; set; } = 0; // Цена товара
+    public decimal Price { get; set; } = 0; 
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Дата создания
-
-    // Навигационные свойства
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
     public ICollection<StockBalance> StockBalances { get; set; } = new List<StockBalance>();
     public ICollection<StockMovement> StockMovements { get; set; } = new List<StockMovement>();
     public ICollection<SaleItem> SaleItems { get; set; } = new List<SaleItem>();

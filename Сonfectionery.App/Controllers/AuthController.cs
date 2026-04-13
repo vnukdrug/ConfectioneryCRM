@@ -32,7 +32,6 @@ public class AuthController : ControllerBase
     {
         try
         {
-            // Ищем пользователя по логину
             var user = await _context.Users
                 .Include(u => u.Filial)
                 .FirstOrDefaultAsync(u => u.Login == dto.Login);
@@ -42,13 +41,37 @@ public class AuthController : ControllerBase
                 return Unauthorized(new { message = "Неверный логин или пароль" });
             }
 
-            // Проверяем пароль
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            bool isPasswordValid = false;
+            bool needsRehash = false;
+
+            if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
+            {
+                isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+            }
+            else
+            {
+                isPasswordValid = (user.PasswordHash == dto.Password);
+
+                if (isPasswordValid)
+                {
+                    needsRehash = true;
+                }
+            }
+
+            if (!isPasswordValid)
             {
                 return Unauthorized(new { message = "Неверный логин или пароль" });
             }
 
-            // Генерируем JWT токен
+            if (needsRehash)
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"Пароль пользователя {user.Login} был перехэширован");
+            }
+
             var token = GenerateJwtToken(user);
 
             return Ok(new AuthResponseDto
@@ -74,7 +97,6 @@ public class AuthController : ControllerBase
     {
         try
         {
-            // Проверяем, не занят ли логин
             var existingUser = await _context.Users
                 .FirstOrDefaultAsync(u => u.Login == dto.Login);
 
@@ -83,7 +105,6 @@ public class AuthController : ControllerBase
                 return Conflict(new { message = "Пользователь с таким логином уже существует" });
             }
 
-            // Создаем нового пользователя
             var user = new User
             {
                 FullName = dto.FullName,
@@ -97,7 +118,6 @@ public class AuthController : ControllerBase
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // Генерируем токен
             var token = GenerateJwtToken(user);
 
             return Ok(new AuthResponseDto
@@ -112,6 +132,8 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
+
+
             Console.WriteLine($"Ошибка при регистрации: {ex.Message}");
             return StatusCode(500, new { message = "Ошибка сервера" });
         }

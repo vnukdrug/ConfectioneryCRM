@@ -25,32 +25,26 @@ public class DashboardController : ControllerBase
         var weekAgo = today.AddDays(-7);
         var monthAgo = today.AddMonths(-1);
 
-        // Выручка за сегодня
         var todayRevenue = await _context.Sales
             .Where(s => s.CreatedAt.Date == today)
             .SumAsync(s => s.TotalAmount);
 
-        // Выручка за неделю
         var weekRevenue = await _context.Sales
             .Where(s => s.CreatedAt >= weekAgo)
             .SumAsync(s => s.TotalAmount);
 
-        // Выручка за месяц
         var monthRevenue = await _context.Sales
             .Where(s => s.CreatedAt >= monthAgo)
             .SumAsync(s => s.TotalAmount);
 
-        // Количество филиалов
         var filialsCount = await _context.Filials.CountAsync();
 
-        // Количество сотрудников
+
         var employeesCount = await _context.Users.CountAsync();
 
-        // Общее количество товаров на складе
         var totalProducts = await _context.StockBalances
             .SumAsync(sb => sb.Quantity);
 
-        // Количество позиций с низким остатком
         var lowStockCount = await _context.StockBalances
             .Include(sb => sb.Product)
             .Where(sb => sb.Quantity <= sb.Product.MinStock)
@@ -75,7 +69,7 @@ public class DashboardController : ControllerBase
             .Include(sb => sb.Filial)
             .Include(sb => sb.Product)
             .Where(sb => sb.Quantity <= sb.Product.MinStock)
-            .OrderBy(sb => sb.Quantity) // сначала самые критичные
+            .OrderBy(sb => sb.Quantity) 
             .Take(10)
             .Select(sb => new LowStockItemDto
             {

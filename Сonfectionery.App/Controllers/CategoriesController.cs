@@ -85,8 +85,6 @@ public class CategoriesController : ControllerBase
             var existingCategory = await _context.Categories.FindAsync(id);
             if (existingCategory == null)
                 return NotFound(new { message = "Категория не найдена" });
-
-            // Проверяем уникальность
             var duplicate = await _context.Categories
                 .FirstOrDefaultAsync(c => c.Name == category.Name && c.Type == category.Type && c.Id != id);
 
@@ -118,7 +116,6 @@ public class CategoriesController : ControllerBase
             if (category == null)
                 return NotFound(new { message = "Категория не найдена" });
 
-            // Проверяем, есть ли товары в этой категории
             if (category.Products != null && category.Products.Any())
                 return BadRequest(new { message = "Нельзя удалить категорию, в которой есть товары" });
 

@@ -53,7 +53,7 @@ const Production: React.FC<ProductionProps> = ({ collapsed, onCollapse }) => {
             console.log('✅ Отметка выполнения плана ID:', id);
             await api.markAsDone(id);
             message.success('Готово!');
-            loadPlan(); // Перезагружаем план
+            loadPlan(); 
         } catch (error) {
             console.error('Ошибка при отметке:', error);
             message.error('Ошибка при отметке');

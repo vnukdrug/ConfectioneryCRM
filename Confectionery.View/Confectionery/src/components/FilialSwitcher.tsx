@@ -21,8 +21,7 @@ const FilialSwitcher: React.FC<FilialSwitcherProps> = ({ onFilialChange }) => {
                 const data = await api.getFilials();
                 if (isMounted) {
                     setFilials(data);
-                    
-                    // Используем user?.role внутри эффекта
+                  
                     if (user?.role === 'Admin') {
                         setSelectedFilial(null);
                         onFilialChange(null);
@@ -40,7 +39,7 @@ const FilialSwitcher: React.FC<FilialSwitcherProps> = ({ onFilialChange }) => {
         return () => {
             isMounted = false;
         };
-    }, [onFilialChange, user?.role]); // 👈 Добавляем зависимости
+    }, [onFilialChange, user?.role]);
 
     const handleChange = (value: number) => {
         setSelectedFilial(value);

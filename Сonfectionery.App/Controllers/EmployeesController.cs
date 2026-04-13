@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 namespace Confectionery.App.Controllers;
 
 [Route("api/[controller]")]
-//[Authorize]
 [ApiController]
 public class EmployeesController : ControllerBase
 {
@@ -19,7 +18,6 @@ public class EmployeesController : ControllerBase
         _context = context;
     }
 
-    // GET: api/employees
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployees()
     {
@@ -38,7 +36,6 @@ public class EmployeesController : ControllerBase
         return Ok(employees);
     }
 
-    // GET: api/employees/5
     [HttpGet("{id}")]
     public async Task<ActionResult<EmployeeDto>> GetEmployee(int id)
     {
@@ -61,11 +58,9 @@ public class EmployeesController : ControllerBase
         return Ok(employee);
     }
 
-    // POST: api/employees
     [HttpPost]
     public async Task<ActionResult<EmployeeDto>> CreateEmployee(CreateEmployeeDto dto)
     {
-        // Проверяем, существует ли уже такой логин
         var existingUser = await _context.Users
             .FirstOrDefaultAsync(u => u.Login == dto.Login);
 
@@ -89,7 +84,6 @@ public class EmployeesController : ControllerBase
         return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, employee);
     }
 
-    // PUT: api/employees/5
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEmployee(int id, CreateEmployeeDto dto)
     {
@@ -111,7 +105,6 @@ public class EmployeesController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/employees/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEmployee(int id)
     {

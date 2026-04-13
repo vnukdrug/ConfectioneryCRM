@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Confectionery.Core\Confectionery.Core.csproj" />
     <ProjectReference Include="..\Confectionery.Data\Confectionery.Data.csproj" />
     <ProjectReference Include="..\Confectionery.View\Confectionery.View.csproj" />
   </ItemGroup>

@@ -3,7 +3,7 @@ import { Layout, Card, Table, Button, InputNumber, message, Spin, Row, Col, Stat
 import { ShoppingCartOutlined, DeleteOutlined } from '@ant-design/icons';
 import Sidebar from '../../components/Sidebar';
 import { api } from '../../api/api';
-import type { CartItem, CashierProduct } from '../../types'; // Импортируем CashierProduct из types
+import type { CartItem, CashierProduct } from '../../types'; 
 
 const { Content } = Layout;
 
@@ -12,11 +12,9 @@ interface SalesProps {
     onCollapse: (collapsed: boolean) => void;
 }
 
-// Удаляем локальный интерфейс CashierProduct, так как он теперь импортируется
-
 const Sales: React.FC<SalesProps> = ({ collapsed, onCollapse }) => {
     const [loading, setLoading] = useState(false);
-    const [products, setProducts] = useState<CashierProduct[]>([]); // Используем импортированный тип
+    const [products, setProducts] = useState<CashierProduct[]>([]); 
     const [cart, setCart] = useState<CartItem[]>([]);
     const user = api.getCurrentUser();
 
@@ -27,8 +25,7 @@ const Sales: React.FC<SalesProps> = ({ collapsed, onCollapse }) => {
                 console.log('💰 Загрузка товаров для кассы, филиал:', user.filialId);
                 const data = await api.getCashierProducts(user.filialId);
                 console.log('💰 Получены товары:', data);
-                
-                // Данные уже должны быть в формате CashierProduct
+               
                 setProducts(data);
             }
         } catch (error) {

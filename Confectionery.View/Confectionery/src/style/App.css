@@ -1,11 +1,11 @@
-/* Sidebar.css - красивый тонкий скролл */
+
 
 .sidebar-scroll-container {
   scrollbar-width: thin;
   scrollbar-color: #c1c1c1 #f0f0f0;
 }
 
-/* Для Chrome, Safari, Edge, Opera */
+
 .sidebar-scroll-container::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -26,7 +26,6 @@
   background: #a8a8a8;
 }
 
-/* Для Firefox */
 .sidebar-scroll-container {
   scrollbar-width: thin;
   scrollbar-color: #c1c1c1 #f0f0f0;
