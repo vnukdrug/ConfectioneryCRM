@@ -16,7 +16,14 @@ public class StockMovement
     public decimal Quantity { get; set; }
 
     [Required, MaxLength(20)]
-    public string MovementType { get; set; } = string.Empty; 
+    public string MovementType { get; set; } = string.Empty;
+
+
+    [MaxLength(50)]
+    public string? Reason { get; set; } 
+
+    [MaxLength(500)]
+    public string? Description { get; set; } 
 
     public int? SourceFilialId { get; set; }
     public Filial? SourceFilial { get; set; }

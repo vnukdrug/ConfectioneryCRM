@@ -222,10 +222,9 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
         const response = await fetch(`${API_BASE_URL}/products`, {
             headers: getHeaders()
         });
-        console.log('📦 Ответ от /products:', response.status);
         if (!response.ok) throw new Error('Ошибка загрузки товаров');
         const data = await response.json();
-        console.log('📦 Данные товаров:', data);
+        console.log('📦 Данные товаров (ID, Name):', data.map((p: any) => ({ id: p.id, name: p.name })));
         return data;
     },
 
@@ -352,7 +351,7 @@ updateUserFilial: async (userId: number, filialId: number | null): Promise<void>
             headers: getHeaders(),
             body: JSON.stringify(data)
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Ошибка при оформлении прихода');

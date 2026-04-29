@@ -79,7 +79,8 @@ export interface Filial {
 }
 
 export interface WarehouseItem {
-    id: number;
+    id: number;           
+    productId: number;    
     filial: string;
     product: string;
     category: string;
@@ -94,7 +95,9 @@ export interface StockMovement {
     filialId: number;
     productId: number;
     quantity: number;
-    movementType: 'income' | 'outcome' | 'transfer';
+    movementType: 'income' | 'outcome' | 'transfer' | 'sale';
+    reason?: string;        
+    description?: string;   
     createdAt?: string;
 }
 export interface PlanItem {

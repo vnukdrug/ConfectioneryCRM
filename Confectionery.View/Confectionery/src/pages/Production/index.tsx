@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Layout, Table, Button, message, Spin, Tag } from 'antd';
-import { CheckCircleOutlined } from '@ant-design/icons';
+import { Layout, Table, Button, message, Spin, Tag, Input as AntInput } from 'antd';
+import { CheckCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import Sidebar from '../../components/Sidebar';
+import ExportButtons from '../../components/ExportButtons';
 import { api } from '../../api/api';
 
 const { Content } = Layout;
@@ -23,15 +24,14 @@ interface PlanItem {
 const Production: React.FC<ProductionProps> = ({ collapsed, onCollapse }) => {
     const [loading, setLoading] = useState(false);
     const [plan, setPlan] = useState<PlanItem[]>([]);
+    const [searchText, setSearchText] = useState('');
     const user = api.getCurrentUser();
 
     const loadPlan = useCallback(async () => {
         setLoading(true);
         try {
             if (user?.filialId) {
-                console.log('📅 Загружаем план для филиала:', user.filialId);
                 const data = await api.getBakerPlan(user.filialId);
-                console.log('📅 Полученные данные:', data);
                 setPlan(data);
             }
         } catch (error) {
@@ -48,19 +48,23 @@ const Production: React.FC<ProductionProps> = ({ collapsed, onCollapse }) => {
         }
     }, [user?.filialId, loadPlan]);
 
+    const filteredPlan = plan.filter(item =>
+        item.product.toLowerCase().includes(searchText.toLowerCase())
+    );
+
     const handleMarkAsDone = async (id: number) => {
         try {
-            console.log('✅ Отметка выполнения плана ID:', id);
             await api.markAsDone(id);
             message.success('Готово!');
-            loadPlan(); 
+            loadPlan();
         } catch (error) {
             console.error('Ошибка при отметке:', error);
             message.error('Ошибка при отметке');
         }
     };
 
-    const columns = [
+    // Колонки для отображения на странице (с кнопкой "Готово")
+    const displayColumns = [
         {
             title: 'Продукт',
             dataIndex: 'product',
@@ -91,9 +95,9 @@ const Production: React.FC<ProductionProps> = ({ collapsed, onCollapse }) => {
             key: 'actions',
             render: (_: unknown, record: PlanItem) => (
                 record.status !== 'completed' && (
-                    <Button 
-                        type="primary" 
-                        icon={<CheckCircleOutlined />} 
+                    <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
                         onClick={() => handleMarkAsDone(record.id)}
                     >
                         Готово
@@ -103,20 +107,57 @@ const Production: React.FC<ProductionProps> = ({ collapsed, onCollapse }) => {
         },
     ];
 
+    // Колонки для экспорта (без кнопки "Готово")
+    const exportColumns = [
+        { title: 'Продукт', dataIndex: 'product' },
+        { title: 'План', dataIndex: 'plannedQuantity' },
+        { title: 'Сделано', dataIndex: 'producedQuantity' },
+        { title: 'Статус', dataIndex: 'status' },
+        { title: 'Дата', dataIndex: 'deadline' },
+    ];
+
+    // Подготовка данных для экспорта
+    const exportData = filteredPlan.map(item => ({
+        'Продукт': item.product,
+        'План': item.plannedQuantity,
+        'Сделано': item.producedQuantity,
+        'Статус': item.status === 'completed' ? 'Готово' : item.status === 'in_progress' ? 'В процессе' : 'Запланировано',
+        'Дата': item.deadline,
+    }));
+
     return (
         <Layout style={{ minHeight: '100vh' }}>
             <Sidebar collapsed={collapsed} onCollapse={onCollapse} />
             <Layout>
                 <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
-                    <h1>План выпечки на сегодня</h1>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h1>План выпечки на сегодня</h1>
+                        <ExportButtons
+                            data={exportData}
+                            columns={exportColumns}
+                            filename="Выпечка"
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: 16 }}>
+                        <AntInput
+                            placeholder="Поиск по продукту..."
+                            prefix={<SearchOutlined />}
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            style={{ width: 300 }}
+                            allowClear
+                        />
+                    </div>
+
                     {loading ? (
                         <div style={{ textAlign: 'center', padding: 50 }}>
                             <Spin size="large" tip="Загрузка..." />
                         </div>
                     ) : (
-                        <Table 
-                            columns={columns} 
-                            dataSource={plan} 
+                        <Table
+                            columns={displayColumns}
+                            dataSource={filteredPlan}
                             rowKey="id"
                             pagination={false}
                         />

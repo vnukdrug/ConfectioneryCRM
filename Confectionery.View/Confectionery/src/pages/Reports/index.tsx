@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, Card, Row, Col, DatePicker, Select, Table, Statistic, Spin, message } from 'antd';
 import { DollarOutlined, ShoppingOutlined, RiseOutlined } from '@ant-design/icons';
 import Sidebar from '../../components/Sidebar';
+import ExportButtons from '../../components/ExportButtons';
 import { api } from '../../api/api';
 import type { SalesByDay, SalesByFilial, TopProduct, ReportFilter } from '../../types';
 import dayjs from 'dayjs';
@@ -41,15 +42,12 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
     const loadReports = useCallback(async () => {
         setLoading(true);
         try {
-            console.log('📊 Загрузка отчетов с фильтром:', filter);
-            
             const [byDay, byFilial, products, summaryData] = await Promise.all([
                 api.getSalesByDay(filter),
                 api.getSalesByFilial(filter),
                 api.getTopProducts(filter),
                 api.getReportSummary(filter)
             ]);
-            
             setSalesByDay(byDay);
             setSalesByFilial(byFilial);
             setTopProducts(products);
@@ -60,7 +58,7 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
         } finally {
             setLoading(false);
         }
-    }, [filter]); 
+    }, [filter]);
 
     useEffect(() => {
         loadFilials();
@@ -70,12 +68,9 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
         if (filter.startDate && filter.endDate) {
             loadReports();
         }
-    }, [filter.startDate, filter.endDate, filter.filialId, loadReports]); 
+    }, [filter, loadReports]);
 
-    const handleDateChange = (
-        _: RangePickerProps['value'], 
-        dateStrings: [string, string]
-    ) => {
+    const handleDateChange = (_: RangePickerProps['value'], dateStrings: [string, string]) => {
         setFilter(prev => ({
             ...prev,
             startDate: dateStrings[0] || undefined,
@@ -154,22 +149,21 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
             <Layout>
                 <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
                     <h1>Отчеты</h1>
-                    
-                    {/* Фильтры */}
+
                     <Card style={{ marginBottom: 24 }}>
                         <Row gutter={16}>
                             <Col span={12}>
-                                <RangePicker 
-                                    style={{ width: '100%' }} 
+                                <RangePicker
+                                    style={{ width: '100%' }}
                                     onChange={handleDateChange}
                                     defaultValue={[dayjs().subtract(7, 'day'), dayjs()]}
                                     placeholder={['Начало периода', 'Конец периода']}
                                 />
                             </Col>
                             <Col span={6}>
-                                <Select 
-                                    placeholder="Все филиалы" 
-                                    style={{ width: '100%' }} 
+                                <Select
+                                    placeholder="Все филиалы"
+                                    style={{ width: '100%' }}
                                     onChange={handleFilialChange}
                                     allowClear
                                 >
@@ -188,7 +182,6 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
                         </div>
                     ) : (
                         <>
-                            {/* Сводка */}
                             <Row gutter={16} style={{ marginBottom: 24 }}>
                                 <Col span={8}>
                                     <Card>
@@ -223,24 +216,41 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
                                 </Col>
                             </Row>
 
-                            {/* Продажи по дням */}
-                            <Card title="Продажи по дням" style={{ marginBottom: 24 }}>
-                                <Table 
-                                    columns={salesByDayColumns} 
-                                    dataSource={salesByDay} 
+                            <Card
+                                title="Продажи по дням"
+                                style={{ marginBottom: 24 }}
+                                extra={
+                                    <ExportButtons
+                                        data={salesByDay}
+                                        columns={salesByDayColumns}
+                                        filename="Продажи_по_дням"
+                                    />
+                                }
+                            >
+                                <Table
+                                    columns={salesByDayColumns}
+                                    dataSource={salesByDay}
                                     rowKey="date"
                                     pagination={false}
                                     size="small"
                                 />
                             </Card>
 
-                            {/* Две колонки */}
                             <Row gutter={16}>
                                 <Col span={12}>
-                                    <Card title="Продажи по филиалам">
-                                        <Table 
-                                            columns={salesByFilialColumns} 
-                                            dataSource={salesByFilial} 
+                                    <Card
+                                        title="Продажи по филиалам"
+                                        extra={
+                                            <ExportButtons
+                                                data={salesByFilial}
+                                                columns={salesByFilialColumns}
+                                                filename="Продажи_по_филиалам"
+                                            />
+                                        }
+                                    >
+                                        <Table
+                                            columns={salesByFilialColumns}
+                                            dataSource={salesByFilial}
                                             rowKey="filial"
                                             pagination={false}
                                             size="small"
@@ -248,10 +258,19 @@ const Reports: React.FC<ReportsProps> = ({ collapsed, onCollapse }) => {
                                     </Card>
                                 </Col>
                                 <Col span={12}>
-                                    <Card title="Топ-10 товаров">
-                                        <Table 
-                                            columns={topProductsColumns} 
-                                            dataSource={topProducts} 
+                                    <Card
+                                        title="Топ-10 товаров"
+                                        extra={
+                                            <ExportButtons
+                                                data={topProducts}
+                                                columns={topProductsColumns}
+                                                filename="Топ_товаров"
+                                            />
+                                        }
+                                    >
+                                        <Table
+                                            columns={topProductsColumns}
+                                            dataSource={topProducts}
                                             rowKey="product"
                                             pagination={false}
                                             size="small"

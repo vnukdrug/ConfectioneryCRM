@@ -7,7 +7,7 @@ import Filials from './pages/Filials';
 import Warehouse from './pages/Warehouse';
 import Reports from './pages/Reports';
 import Production from './pages/Production';
-import Sales from './pages/Sales';
+import Sales from './pages/Sales/index';
 import Products from './pages/Products';
 import ProtectedRoute from './components/ProtectedRoute';
 import Planning from './pages/Planning';

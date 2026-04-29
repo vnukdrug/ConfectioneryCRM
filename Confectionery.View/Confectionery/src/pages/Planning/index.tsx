@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Layout, Card, Table, Button, Modal, Form, Select, DatePicker, InputNumber, message, Tag } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Layout, Card, Table, Button, Modal, Form, Select, DatePicker, InputNumber, message, Tag, Input as AntInput, Space } from 'antd';
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import Sidebar from '../../components/Sidebar';
+import ExportButtons from '../../components/ExportButtons';
 import { api } from '../../api/api';
 import type { Product, PlanItem } from '../../types';
 import dayjs from 'dayjs';
@@ -21,68 +22,57 @@ const Planning: React.FC<PlanningProps> = ({ collapsed, onCollapse }) => {
     const [filials, setFilials] = useState<{ id: number; name: string }[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
+    const [searchText, setSearchText] = useState('');
     const user = api.getCurrentUser();
+    const isAdmin = user?.role === 'Admin';
+    const isDirector = user?.role === 'Director';
+    const canCreate = isAdmin || isDirector;
 
     const loadData = useCallback(async () => {
         console.log('🔄 loadData started');
         setLoading(true);
         try {
-            console.log('📦 Загружаем товары и филиалы...');
             const [productsData, filialsData] = await Promise.all([
                 api.getAllProducts(),
                 api.getFilials()
             ]);
-            
-            console.log('✅ Товары получены:', productsData);
-            console.log('✅ Филиалы получены:', filialsData);
-            
+
             const bakeryProducts = productsData.filter(p => p.categoryType === 'product');
-            console.log('🍰 Товары для выпечки:', bakeryProducts);
-            
             setProducts(bakeryProducts);
             setFilials(filialsData);
 
             if (user?.filialId) {
-                console.log('📅 Загружаем план для филиала:', user.filialId);
                 const plansData = await api.getBakerPlan(user.filialId);
-                console.log('✅ План получен:', plansData);
                 setPlans(plansData);
             } else {
-                console.log('⚠️ Нет filialId у пользователя, загружаем для всех');
-                const plansData = await api.getBakerPlan(1); 
+                const plansData = await api.getBakerPlan(1);
                 setPlans(plansData);
             }
         } catch (error) {
             console.error('❌ Ошибка загрузки:', error);
             message.error('Ошибка загрузки данных');
         } finally {
-            console.log('🏁 loadData finished');
             setLoading(false);
         }
-    }, [user?.filialId]); 
+    }, [user?.filialId]);
 
     useEffect(() => {
         loadData();
-    }, [loadData]); 
+    }, [loadData]);
+
+    const filteredPlans = plans.filter(plan =>
+        plan.product.toLowerCase().includes(searchText.toLowerCase())
+    );
 
     const handleCreatePlan = async () => {
         try {
             const values = await form.validateFields();
-            
-            console.log('📝 Создание плана:', {
-                filialId: values.filialId,
-                productId: values.productId,
-                quantity: values.quantity,
-                planDate: values.planDate.toISOString()
-            });
-            
             await api.createPlan({
                 filialId: values.filialId,
                 productId: values.productId,
                 quantity: values.quantity,
                 planDate: values.planDate.toISOString()
             });
-
             message.success('План создан');
             setIsModalOpen(false);
             form.resetFields();
@@ -131,21 +121,37 @@ const Planning: React.FC<PlanningProps> = ({ collapsed, onCollapse }) => {
             <Sidebar collapsed={collapsed} onCollapse={onCollapse} />
             <Layout>
                 <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <h1>Планирование выпечки</h1>
-                        <Button 
-                            type="primary" 
-                            icon={<PlusOutlined />} 
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            Создать план
-                        </Button>
+                        <Space>
+                            <ExportButtons
+                                data={filteredPlans}
+                                columns={columns}
+                                filename="Планирование_выпечки"
+                            />
+                            {canCreate && (
+                                <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+                                    Создать план
+                                </Button>
+                            )}
+                        </Space>
+                    </div>
+
+                    <div style={{ marginBottom: 16 }}>
+                        <AntInput
+                            placeholder="Поиск по продукту..."
+                            prefix={<SearchOutlined />}
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            style={{ width: 300 }}
+                            allowClear
+                        />
                     </div>
 
                     <Card title="План на сегодня">
-                        <Table 
-                            columns={columns} 
-                            dataSource={plans} 
+                        <Table
+                            columns={columns}
+                            dataSource={filteredPlans}
                             rowKey="id"
                             loading={loading}
                             pagination={false}
@@ -162,22 +168,21 @@ const Planning: React.FC<PlanningProps> = ({ collapsed, onCollapse }) => {
                         width={500}
                     >
                         <Form form={form} layout="vertical">
-                            <Form.Item 
-                                name="filialId" 
-                                label="Филиал" 
+                            <Form.Item
+                                name="filialId"
+                                label="Филиал"
                                 rules={[{ required: true }]}
                                 initialValue={user?.filialId}
                             >
-                                <Select disabled={user?.role === 'Director'}>
+                                <Select disabled={!isAdmin}>
                                     {filials.map(f => (
                                         <Option key={f.id} value={f.id}>{f.name}</Option>
                                     ))}
                                 </Select>
                             </Form.Item>
-
-                            <Form.Item 
-                                name="productId" 
-                                label="Продукт" 
+                            <Form.Item
+                                name="productId"
+                                label="Продукт"
                                 rules={[{ required: true }]}
                             >
                                 <Select placeholder="Выберите продукт">
@@ -192,18 +197,16 @@ const Planning: React.FC<PlanningProps> = ({ collapsed, onCollapse }) => {
                                     )}
                                 </Select>
                             </Form.Item>
-
-                            <Form.Item 
-                                name="quantity" 
-                                label="Количество" 
+                            <Form.Item
+                                name="quantity"
+                                label="Количество"
                                 rules={[{ required: true }]}
                             >
                                 <InputNumber min={1} style={{ width: '100%' }} />
                             </Form.Item>
-
-                            <Form.Item 
-                                name="planDate" 
-                                label="Дата" 
+                            <Form.Item
+                                name="planDate"
+                                label="Дата"
                                 rules={[{ required: true }]}
                                 initialValue={dayjs()}
                             >

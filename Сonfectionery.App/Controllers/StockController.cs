@@ -37,6 +37,7 @@ public class StockController : ControllerBase
             .Select(sb => new StockBalanceDto
             {
                 Id = sb.Id,
+                ProductId = sb.ProductId,  
                 Filial = sb.Filial.Name,
                 Product = sb.Product.Name,
                 Category = sb.Product.Category.Name,
@@ -72,110 +73,115 @@ public class StockController : ControllerBase
     [HttpPost("movement")]
     public async Task<ActionResult> CreateMovement(CreateStockMovementDto dto)
     {
-        Console.WriteLine($"=== Начало создания движения ===");
-        Console.WriteLine($"FilialId: {dto.FilialId}, ProductId: {dto.ProductId}, Quantity: {dto.Quantity}");
+        Console.WriteLine($"=== НАЧАЛО СОЗДАНИЯ ДВИЖЕНИЯ ===");
+        Console.WriteLine($"FilialId: {dto.FilialId}");
+        Console.WriteLine($"ProductId: {dto.ProductId}");
+        Console.WriteLine($"Quantity: {dto.Quantity}");
+        Console.WriteLine($"MovementType: {dto.MovementType}");
+        Console.WriteLine($"Reason: {dto.Reason}");
+        Console.WriteLine($"Description: {dto.Description}");
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
         {
+            // Проверяем существование филиала
             var filial = await _context.Filials.FindAsync(dto.FilialId);
             if (filial == null)
             {
-                Console.WriteLine($"Филиал с ID {dto.FilialId} не найден");
+                Console.WriteLine($"❌ Филиал с ID {dto.FilialId} не найден");
                 return BadRequest(new { message = "Филиал не найден" });
             }
+            Console.WriteLine($"✅ Филиал найден: {filial.Name}");
+
+            // Проверяем существование товара
             var product = await _context.Products.FindAsync(dto.ProductId);
             if (product == null)
             {
-                Console.WriteLine($"Товар с ID {dto.ProductId} не найден");
+                Console.WriteLine($"❌ Товар с ID {dto.ProductId} не найден");
                 return BadRequest(new { message = "Товар не найден" });
             }
+            Console.WriteLine($"✅ Товар найден: {product.Name}");
 
-            var user = await _context.Users.FindAsync(6);
-            if (user == null)
+            // Получаем ID пользователя из токена
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+            int userId = 1;
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedUserId))
             {
-                Console.WriteLine("Пользователь с ID=1 не найден, создаем системного пользователя");
-
-                user = new User
-                {
-                    FullName = "Система",
-                    Login = "system",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("system"),
-                    Role = "System",
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-                Console.WriteLine($"Системный пользователь создан с ID: {user.Id}");
+                userId = parsedUserId;
             }
+            Console.WriteLine($"👤 UserId: {userId}");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // Находим или создаем остаток
+            var balance = await _context.StockBalances
+                .FirstOrDefaultAsync(sb => sb.FilialId == dto.FilialId && sb.ProductId == dto.ProductId);
 
-            try
+            if (balance == null)
             {
-                var balance = await _context.StockBalances
-                    .FirstOrDefaultAsync(sb => sb.FilialId == dto.FilialId && sb.ProductId == dto.ProductId);
-
-                if (balance == null)
-                {
-                    Console.WriteLine("Остаток не найден, создаем новый");
-                    balance = new StockBalance
-                    {
-                        FilialId = dto.FilialId,
-                        ProductId = dto.ProductId,
-                        Quantity = 0
-                    };
-                    _context.StockBalances.Add(balance);
-                }
-
-                if (dto.MovementType == "income")
-                {
-                    balance.Quantity += dto.Quantity;
-                    Console.WriteLine($"Приход: новый остаток = {balance.Quantity}");
-                }
-                else if (dto.MovementType == "outcome")
-                {
-                    if (balance.Quantity < dto.Quantity)
-                    {
-                        return BadRequest(new { message = "Недостаточно товара на складе" });
-                    }
-                    balance.Quantity -= dto.Quantity;
-                }
-                var movement = new StockMovement
+                Console.WriteLine($"📦 Остаток не найден, создаем новый");
+                balance = new StockBalance
                 {
                     FilialId = dto.FilialId,
                     ProductId = dto.ProductId,
-                    Quantity = dto.Quantity,
-                    MovementType = dto.MovementType,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedByUserId = user.Id
+                    Quantity = 0
                 };
-                _context.StockMovements.Add(movement);
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return Ok(new { message = "Движение товара успешно зарегистрировано" });
+                _context.StockBalances.Add(balance);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"ОШИБКА В ТРАНЗАКЦИИ: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                }
-                await transaction.RollbackAsync();
-                throw;
+                Console.WriteLine($"📦 Текущий остаток: {balance.Quantity}");
             }
+
+            // Обновляем количество
+            var oldQuantity = balance.Quantity;
+            balance.Quantity += dto.Quantity;
+            Console.WriteLine($"📦 Было: {oldQuantity}, стало: {balance.Quantity}");
+
+            // Проверка на отрицательный остаток
+            if (balance.Quantity < 0)
+            {
+                Console.WriteLine($"❌ Ошибка: недостаточно товара! Попытка списать {Math.Abs(dto.Quantity)}, доступно {oldQuantity}");
+                await transaction.RollbackAsync();
+                return BadRequest(new { message = "Недостаточно товара на складе" });
+            }
+
+            // Сохраняем движение
+            var movement = new StockMovement
+            {
+                FilialId = dto.FilialId,
+                ProductId = dto.ProductId,
+                Quantity = dto.Quantity,
+                MovementType = dto.MovementType,
+                Reason = dto.Reason,
+                Description = dto.Description,
+                CreatedAt = DateTime.UtcNow,
+                CreatedByUserId = userId
+            };
+            _context.StockMovements.Add(movement);
+            Console.WriteLine($"📝 Движение добавлено");
+
+            await _context.SaveChangesAsync();
+            Console.WriteLine($"💾 Изменения сохранены");
+
+            await transaction.CommitAsync();
+            Console.WriteLine($"✅ Транзакция подтверждена");
+
+            return Ok(new { message = "Движение товара успешно зарегистрировано" });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ГЛОБАЛЬНАЯ ОШИБКА: {ex.Message}");
+            await transaction.RollbackAsync();
+            Console.WriteLine($"❌ ОШИБКА: {ex.Message}");
             if (ex.InnerException != null)
             {
-                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                Console.WriteLine($"❌ Inner Exception: {ex.InnerException.Message}");
+                Console.WriteLine($"❌ Stack Trace: {ex.InnerException.StackTrace}");
             }
             return StatusCode(500, new { message = "Ошибка при сохранении", error = ex.Message });
+        }
+        finally
+        {
+            Console.WriteLine($"=== КОНЕЦ СОЗДАНИЯ ДВИЖЕНИЯ ===");
         }
     }
 }

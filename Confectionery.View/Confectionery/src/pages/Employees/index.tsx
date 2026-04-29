@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Layout, Table, Button, Modal, Form, Input, Select, message, Space } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Layout, Table, Button, Modal, Form, Input, Select, message, Space, Popconfirm, Input as AntInput } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import Sidebar from '../../components/Sidebar';
+import ExportButtons from '../../components/ExportButtons';
 import { api } from '../../api/api';
 import type { Employee } from '../../types';
 
 const { Content } = Layout;
+const { Option } = Select;
 
 interface EmployeesProps {
     collapsed: boolean;
@@ -20,25 +22,58 @@ const Employees: React.FC<EmployeesProps> = ({ collapsed, onCollapse }) => {
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [form] = Form.useForm();
 
-    const loadData = async () => {
+    const [searchText, setSearchText] = useState('');
+    const [selectedFilial, setSelectedFilial] = useState<string>('all');
+
+    const user = api.getCurrentUser();
+    const isAdmin = user?.role === 'Admin';
+    const isDirector = user?.role === 'Director';
+
+    const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const [emps, fils] = await Promise.all([
                 api.getEmployees(),
                 api.getFilials()
             ]);
-            setEmployees(emps);
+
+            if (isDirector && user?.filialId) {
+                const directorFilial = fils.find(f => f.id === user.filialId);
+                const filteredEmps = emps.filter(e => e.filial === directorFilial?.name);
+                setEmployees(filteredEmps);
+            } else {
+                setEmployees(emps);
+            }
+
             setFilials(fils.map(f => ({ id: f.id, name: f.name })));
         } catch {
             message.error('Ошибка загрузки данных');
         } finally {
             setLoading(false);
         }
-    };
+    }, [isDirector, user?.filialId]);
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [loadData]);
+
+    const filteredEmployees = employees.filter(employee => {
+        const matchesSearch = employee.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
+            employee.login.toLowerCase().includes(searchText.toLowerCase());
+        let matchesFilial = true;
+        if (isAdmin && selectedFilial !== 'all') {
+            matchesFilial = employee.filial === selectedFilial;
+        }
+        return matchesSearch && matchesFilial;
+    });
+
+    const filialOptions = isAdmin
+        ? Array.from(new Set(employees.map(e => e.filial))).filter(f => f)
+        : [];
+
+    const currentFilialName = isDirector && user?.filialId
+        ? filials.find(f => f.id === user.filialId)?.name
+        : null;
 
     const columns = [
         {
@@ -75,17 +110,16 @@ const Employees: React.FC<EmployeesProps> = ({ collapsed, onCollapse }) => {
             key: 'actions',
             render: (_: unknown, record: Employee) => (
                 <Space>
-                    <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        onClick={() => handleEdit(record)}
-                    />
-                    <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDelete(record.id)}
-                    />
+                    <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+                    <Popconfirm
+                        title="Удалить сотрудника"
+                        description="Вы уверены?"
+                        onConfirm={() => handleDelete(record.id)}
+                        okText="Да"
+                        cancelText="Нет"
+                    >
+                        <Button type="text" danger icon={<DeleteOutlined />} />
+                    </Popconfirm>
                 </Space>
             ),
         },
@@ -109,19 +143,13 @@ const Employees: React.FC<EmployeesProps> = ({ collapsed, onCollapse }) => {
     };
 
     const handleDelete = async (id: number) => {
-        Modal.confirm({
-            title: 'Подтверждение',
-            content: 'Вы уверены, что хотите удалить сотрудника?',
-            onOk: async () => {
-                try {
-                    await api.deleteEmployee(id);
-                    message.success('Сотрудник удален');
-                    loadData();
-                } catch {
-                    message.error('Ошибка при удалении');
-                }
-            },
-        });
+        try {
+            await api.deleteEmployee(id);
+            message.success('Сотрудник удален');
+            loadData();
+        } catch {
+            message.error('Ошибка при удалении');
+        }
     };
 
     const handleSave = async () => {
@@ -149,84 +177,105 @@ const Employees: React.FC<EmployeesProps> = ({ collapsed, onCollapse }) => {
             <Sidebar collapsed={collapsed} onCollapse={onCollapse} />
             <Layout>
                 <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <h1>Сотрудники</h1>
-                        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                            Добавить сотрудника
-                        </Button>
+                        <Space>
+                            <ExportButtons
+                                data={filteredEmployees}
+                                columns={columns}
+                                filename="Сотрудники"
+                            />
+                            {isAdmin && (
+                                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                                    Добавить сотрудника
+                                </Button>
+                            )}
+                        </Space>
                     </div>
+
+                    {isAdmin && (
+                        <div style={{ marginBottom: 16, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <AntInput
+                                placeholder="Поиск по ФИО или логину..."
+                                prefix={<SearchOutlined />}
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                style={{ width: 300 }}
+                                allowClear
+                            />
+                            <Select
+                                placeholder="Все филиалы"
+                                value={selectedFilial}
+                                onChange={setSelectedFilial}
+                                style={{ width: 200 }}
+                                allowClear
+                            >
+                                <Option value="all">Все филиалы</Option>
+                                {filialOptions.map(filial => (
+                                    <Option key={filial} value={filial}>{filial}</Option>
+                                ))}
+                            </Select>
+                            {(searchText || selectedFilial !== 'all') && (
+                                <Button onClick={() => { setSearchText(''); setSelectedFilial('all'); }}>
+                                    Сбросить фильтры
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    {isDirector && currentFilialName && (
+                        <div style={{ marginBottom: 16, padding: '8px 12px', background: '#e6f7ff', borderRadius: 6 }}>
+                            <span>📋 Показаны сотрудники филиала: <strong>{currentFilialName}</strong></span>
+                        </div>
+                    )}
 
                     <Table
                         columns={columns}
-                        dataSource={employees}
+                        dataSource={filteredEmployees}
                         rowKey="id"
                         loading={loading}
                         pagination={{ pageSize: 10 }}
                     />
 
-                    <Modal
-                        title={editingEmployee ? 'Редактировать сотрудника' : 'Добавить сотрудника'}
-                        open={isModalOpen}
-                        onOk={handleSave}
-                        onCancel={() => setIsModalOpen(false)}
-                        okText="Сохранить"
-                        cancelText="Отмена"
-                    >
-                        <Form
-                            form={form}
-                            layout="vertical"
+                    {isAdmin && (
+                        <Modal
+                            title={editingEmployee ? 'Редактировать сотрудника' : 'Добавить сотрудника'}
+                            open={isModalOpen}
+                            onOk={handleSave}
+                            onCancel={() => setIsModalOpen(false)}
+                            okText="Сохранить"
+                            cancelText="Отмена"
                         >
-                            <Form.Item
-                                name="fullName"
-                                label="ФИО"
-                                rules={[{ required: true, message: 'Введите ФИО' }]}
-                            >
-                                <Input placeholder="Иванов Иван Иванович" />
-                            </Form.Item>
-
-                            <Form.Item
-                                name="login"
-                                label="Логин"
-                                rules={[{ required: true, message: 'Введите логин' }]}
-                            >
-                                <Input placeholder="ivanov" />
-                            </Form.Item>
-
-                            {!editingEmployee && (
-                                <Form.Item
-                                    name="password"
-                                    label="Пароль"
-                                    rules={[{ required: true, message: 'Введите пароль' }]}
-                                >
-                                    <Input.Password placeholder="******" />
+                            <Form form={form} layout="vertical">
+                                <Form.Item name="fullName" label="ФИО" rules={[{ required: true }]}>
+                                    <Input placeholder="Иванов Иван Иванович" />
                                 </Form.Item>
-                            )}
-
-                            <Form.Item
-                                name="role"
-                                label="Роль"
-                                rules={[{ required: true, message: 'Выберите роль' }]}
-                            >
-                                <Select>
-                                    <Select.Option value="Admin">Администратор</Select.Option>
-                                    <Select.Option value="Director">Директор филиала</Select.Option>
-                                    <Select.Option value="Baker">Повар</Select.Option>
-                                    <Select.Option value="Cashier">Кассир</Select.Option>
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                name="filialId"
-                                label="Филиал"
-                            >
-                                <Select allowClear placeholder="Выберите филиал">
-                                    {filials.map(f => (
-                                        <Select.Option key={f.id} value={f.id}>{f.name}</Select.Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Form>
-                    </Modal>
+                                <Form.Item name="login" label="Логин" rules={[{ required: true }]}>
+                                    <Input placeholder="ivanov" />
+                                </Form.Item>
+                                {!editingEmployee && (
+                                    <Form.Item name="password" label="Пароль" rules={[{ required: true }]}>
+                                        <Input.Password placeholder="******" />
+                                    </Form.Item>
+                                )}
+                                <Form.Item name="role" label="Роль" rules={[{ required: true }]}>
+                                    <Select>
+                                        <Option value="Admin">Администратор</Option>
+                                        <Option value="Director">Директор филиала</Option>
+                                        <Option value="Baker">Повар</Option>
+                                        <Option value="Cashier">Кассир</Option>
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item name="filialId" label="Филиал">
+                                    <Select allowClear placeholder="Выберите филиал">
+                                        {filials.map(f => (
+                                            <Option key={f.id} value={f.id}>{f.name}</Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+                    )}
                 </Content>
             </Layout>
         </Layout>
